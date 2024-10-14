@@ -17,7 +17,11 @@ public abstract class AbstractJob implements InterruptableJob {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         try {
-            runJob(context);
+            if (!interrupt) {
+                runJob(context);
+            } else {
+                log.info("Job was interrupted: {}", context.getJobDetail().getKey().getName());
+            }
         } catch(Throwable e) {
             log.error("Error when running runJob for job " + this.getClass().getSimpleName(), e);
             JobExecutionException jobExecutionException = new JobExecutionException(e);
@@ -35,9 +39,4 @@ public abstract class AbstractJob implements InterruptableJob {
     public abstract void onException(JobExecutionContext context);
 
     public abstract void runJob(JobExecutionContext context) throws Exception;
-
-    protected void checkInterrupt() throws InterruptedException {
-        if (interrupt)
-            throw new InterruptedException("Job " + this.getClass().getSimpleName() + " was interrupted");
-    }
 }
